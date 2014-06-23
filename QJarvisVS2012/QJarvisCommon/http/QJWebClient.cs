@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
+using CodeBetter.Json;
+
 
 namespace com.quadramma.qjarvis.http
 {
@@ -33,7 +32,12 @@ namespace com.quadramma.qjarvis.http
             };
             data["fileInputName"] = fileInputName; //QJarvis PHP read this for file name.
             var json = Encoding.Default.GetString(UploadFiles(address, files, data));
-            QJUploadFileResponse stuff = new JavaScriptSerializer().Deserialize<QJUploadFileResponse>(json);
+            //var jsontres = "{\"ok\":\"1\",\"root\":\"http:\\/\\/www.quadramma.com\\/pruebas\\/qjarvis\\/api\\/file\\/images\",\"filename\":\"image_6199f023168488f2deb72a43dbfa117d_gen.jpg\",\"url\":\"http:\\/\\/www.quadramma.com\\/pruebas\\/qjarvis\\/api\\/file\\/images\\/image_6199f023168488f2deb72a43dbfa117d_gen.jpg\",\"message\":\"Everything work just fine\"}";
+            //var jsondos = "{\"ok\":\"1\",\"root\":\"www.quadramma.com/pruebas/qjarvis/api/file\\/images\",\"filename\":\"image_6199f023168488f2deb72a43dbfa117d_gen.jpg\",\"url\":\"http:\\/\\/www.quadramma.com\\/pruebas\\/qjarvis\\/api\\/file\\/images\\/image_6199f023168488f2deb72a43dbfa117d_gen.jpg\",\"message\":\"Everything work just fine\"}";
+            QJUploadFileResponse stuff = Converter.Deserialize<QJUploadFileResponse>(json, "_");
+
+            
+
             return stuff;
         }
 
@@ -69,7 +73,19 @@ namespace com.quadramma.qjarvis.http
                     requestStream.Write(buffer, 0, buffer.Length);
                     buffer = Encoding.ASCII.GetBytes(string.Format("Content-Type: {0}{1}{1}", file.ContentType, Environment.NewLine));
                     requestStream.Write(buffer, 0, buffer.Length);
-                    file.Stream.CopyTo(requestStream);
+                    //file.Stream.CopyTo(requestStream);
+
+                    //SStreamCopyTo(file.Stream, requestStream);
+                    //
+                    byte[] buffertemp = new byte[16 * 1024]; // Fairly arbitrary size
+                    int bytesRead;
+
+                    while ((bytesRead = file.Stream.Read(buffertemp, 0, buffertemp.Length)) > 0)
+                    {
+                        requestStream.Write(buffertemp, 0, bytesRead);
+                    }
+                    //
+
                     buffer = Encoding.ASCII.GetBytes(Environment.NewLine);
                     requestStream.Write(buffer, 0, buffer.Length);
                 }
@@ -82,10 +98,34 @@ namespace com.quadramma.qjarvis.http
             using (var responseStream = response.GetResponseStream())
             using (var stream = new MemoryStream())
             {
-                responseStream.CopyTo(stream);
+                //responseStream.CopyTo(stream);
+                //
+                byte[] buffertemp = new byte[16 * 1024]; // Fairly arbitrary size
+                int bytesRead;
+
+                while ((bytesRead = responseStream.Read(buffertemp, 0, buffertemp.Length)) > 0)
+                {
+                    stream.Write(buffertemp, 0, bytesRead);
+                }
+                //
                 return stream.ToArray();
             }
         }
+
+       /* 
+        // Only useful before .NET 4
+        private static void SStreamCopyTo(this Stream input, Stream output)
+        {
+            byte[] buffer = new byte[16 * 1024]; // Fairly arbitrary size
+            int bytesRead;
+
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
+        * */
+         
         public static byte[] GetFileByteArray(string filename)
         {
             FileStream oFileStream = new FileStream(filename, FileMode.Open, FileAccess.Read);

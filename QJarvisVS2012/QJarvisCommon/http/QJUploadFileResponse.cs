@@ -1,19 +1,34 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using CodeBetter.Json;
+
 
 namespace com.quadramma.qjarvis.http
 {
-   
+
+    [SerializeIncludingBase]
     public class QJUploadFileResponse
     {
-        public string ok { get; set; }
-        public string root { get; set; }
-        public string filename { get; set; }
-        public string url { get; set; }
-        public string message { get; set; }
+        private string _ok;
+        private string _root;
+        private string _filename;
+        private string _url;
+        private string _message;
+        public string ok { get { return _ok; } set { _ok = value; } }
+        public string root { get { return _root; } set { _root = value; } }
+        public string filename { get { return _filename; } set { _filename = value; } }
+        public string url { get { return _url; } set { _url = value; } }
+        public string message { get { return _message; } set { _message = value; } }
+
+         public QJUploadFileResponse(string ok,string root,string filename,string url,string message) {
+            this.ok = ok;
+            this.root = root;
+            this.filename = filename;
+            this.url = url;
+            this.message = message;
+        }
+         private QJUploadFileResponse() { }
     }
 
     /*
